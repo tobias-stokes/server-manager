@@ -1,0 +1,91 @@
+<html>
+    <head>
+        <link rel="shortcut icon" href="#">
+        <style>
+            .online {
+                color: green;
+            }
+            .stopped {
+                color: red;
+            }
+            .stopping {
+                color: yellow;
+            }
+            fieldset {
+                width: 400px;
+                border: solid 1px black;
+                border-radius: 8px;
+            }
+        </style>
+        <script>
+            setInterval(async () => {
+                const fetchResponse = await fetch('/getStatus');
+                const received = await fetchResponse.json();
+
+                received.forEach(server => {
+                    document.getElementById(`status[${server.server}]`).innerText = server.status;
+                    document.getElementById(`status[${server.server}]`).className = server.status;
+                    document.getElementById(`cpu[${server.server}]`).innerText = `${server.monitor.cpu}%`;
+                    document.getElementById(`memory[${server.server}]`).innerText = `${(server.monitor.memory * 0.000001).toFixed(0)}mb`;
+                });
+            }, 1000);
+
+            addEventListener('submit', event => {
+                const serverName = document.getElementById('name').value.split(' ');
+                
+                if (serverName.length > 1) {
+                    alert('Server name must have no spaces');
+                    event.preventDefault();
+                }
+            });
+        </script>
+    </head>
+    <body>
+        <h1> Server manager </h1>
+        <fieldset>
+            <legend> <h2> Servers </h2> </legend>
+            
+            <div id="container">
+                <table>
+                    <tr> <th> Server name </th> <th> Port </th> <th> Options </th> <th> Status </th> <th> CPU </th> <th> Memory </th> </tr>
+                    <tr>
+                        <% servers.forEach(server => { %>
+                            <tr>
+                                <td> <%= server.server %> </td>
+                                <td> <%= server.port %> </td>
+                                <td>
+                                    <a href="/start/<%= server.server %>"> Start </a>
+                                        ||
+                                    <a href="/stop/<%= server.server %>"> Stop </a>
+                                        ||
+                                    <a href="/restart/<%= server.server %>"> Restart </a>
+                                        ||
+                                    <a href="/delete/<%= server.server %>"> Delete </a>
+                                </td>
+                                <td id="status[<%= server.server %>]">
+                                    <%= server.status %>
+                                </td>
+                                <td id="cpu[<%= server.server %>]"></td>
+                                <td id="memory[<%= server.server %>]"></td>
+                            </tr>
+                        <% }) %>
+                    </tr>
+                </table>
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <legend> <h2> New server </h2> </legend>
+
+            <form action="/newServer" method="POST">
+                <table>
+                    <tr>
+                        <th> <label for="name"> Server name: </label> </th>
+                        <td> <input type="text" name="name" id="name" required> </td>
+                    </tr>
+                </table>
+                    <button type="submit"> Create </button>
+            </form>
+        </fieldset>
+    </body>
+</html>
